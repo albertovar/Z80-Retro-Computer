@@ -4,7 +4,7 @@ Add authoritative ASM source here. Prior conversation referenced `Z80_monitor_lo
 
 ## Build and ROM programming workflow
 
-The following commands are taken from the user's shell history and represent the **known working workflow**. They have not been independently tested in this repository.
+The following commands are taken from the user's shell history and represent the **known working workflow**.
 
 ### Assemble the monitor
 
@@ -27,15 +27,18 @@ z80asm -l -o Z80_monitor.bin Z80_monitor.asm
 
 ### Add ROM padding and CRC
 
+The utility is in [`firmware/utils/make_rom.py`](../utils/make_rom.py).
+
 ```sh
-python3 make_rom.py monitor.bin monitor_CRC.bin
+python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
 ```
 
-This is the recorded invocation of the project utility `make_rom.py`. The resulting `monitor_CRC.bin` is the ROM image intended for programming.
-
-The documented ROM format is 32 KiB, CRC-16/CCITT-FALSE (initial value `FFFFh`, polynomial `1021h`, MSB-first), covering `0000h–7FFDh`, with CRC stored at `7FFEh–7FFFh` (MSB first).
-
-**Pending:** The `make_rom.py` source itself is not currently documented or included here. Its exact padding/fill behavior and error handling should be verified from the actual script before relying on those details.
+Run from the repository root (or adjust the script path if working from another directory). The utility:
+- Rejects input larger than 32766 bytes (7FFEh).
+- Pads the program with `00h` bytes through address 7FFDh.
+- Calculates CRC-16/CCITT-FALSE (initial value `FFFFh`, polynomial `1021h`, MSB-first) over `0000h–7FFDh`.
+- Stores the CRC at `7FFEh–7FFFh`, MSB first.
+- Produces a 32 KiB (`8000h`) ROM image.
 
 ### Program the AT28C256 using Minipro/T48
 
@@ -45,27 +48,42 @@ minipro -p AT28C256 -w monitor_CRC.bin -s
 
 This is the command recorded in shell history. The `-s` option is used in the recorded workflow to accept the ROM image size.
 
-### Load a binary into RAM over the serial port
+## Load a binary into RAM over the serial port
+
+The utility is [`firmware/utils/sendbin.py`](../utils/sendbin.py). It sends a binary file to the monitor over the UART and asks the monitor to store it in RAM.
+
+**Standard memory mode:** ROM occupies `0000h–7FFFh`; SRAM is mapped at `8000h–FFFFh`. Therefore, the first address of RAM in standard mode is **`8000h`**.
+
+Example (from the repository root):
 
 ```sh
-python3 sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin
+python3 firmware/utils/sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin
 ```
 
-Recorded parameters:
-- Serial device: `/dev/ttyUSB0`
-- Load address argument: `8000` (as passed to the script)
-- Input binary: `SWITCHES_monitor.bin`
+Arguments:
+- `/dev/ttyUSB0`: serial port
+- `8000`: load address, interpreted by the script as **hexadecimal** (`8000h`)
+- `SWITCHES_monitor.bin`: binary file to transfer
 
-**Pending:** The `sendbin.py` source is not currently documented or included here. Confirm baud rate, address parsing (hexadecimal vs decimal), transfer protocol, acknowledgements and error handling from the script itself. Do not assume the script's implementation from the command line alone.
+Implementation details confirmed from `sendbin.py`:
+- UART settings: 115200 baud, timeout 1 s, write timeout 10 s.
+- Sends the monitor command `loadbin <address> <length>\r`, with address and byte count in four-digit hexadecimal.
+- Waits up to 10 s for `READY` before sending the raw file bytes.
+- Waits up to 30 s for the monitor's `loadbin complete` confirmation.
+- Validates the load address is in `8000h–EFFFh` and that the transfer does not extend beyond `EFFFh` (the upper boundary is exclusive at `F000h`).
+- Requires Python's `pyserial` module.
+
+The current utility restricts transfers to `8000h–EFFFh`, consistent with the monitor's reserved upper RAM area at `F000h–FFFFh`.
 
 ## Tools used in the workflow
 
 - `z80asm` — Z80 assembler
-- `python3` — runs `make_rom.py` and `sendbin.py`
+- Python 3 — runs `make_rom.py` and `sendbin.py`
+- `pyserial` — serial port support for `sendbin.py`
 - `minipro` — programs the AT28C256 through the T48
 - Serial device such as `/dev/ttyUSB0` — target UART connection
 
-For terminal access to the board, the project context records:
+For terminal access to the board:
 
 ```sh
 screen /dev/ttyUSB0 115200
@@ -79,7 +97,7 @@ ROM build/program:
 
 ```sh
 z80asm -o monitor.bin monitor.asm
-python3 make_rom.py monitor.bin monitor_CRC.bin
+python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
 minipro -p AT28C256 -w monitor_CRC.bin -s
 ```
 
@@ -87,14 +105,11 @@ RAM binary load:
 
 ```sh
 z80asm -o SWITCHES_monitor.bin SWITCHES_monitor.asm
-python3 sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin
+python3 firmware/utils/sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin
 ```
 
 ## Documentation gaps / pending verification
 
-- Add the actual `make_rom.py` and `sendbin.py` source files or document their exact behavior.
-- Record how to install `z80asm`, Python 3 and Minipro on the target Linux distribution.
+- Record how to install `z80asm`, Python 3, `pyserial` and Minipro on the target Linux distribution.
 - Confirm the exact assembler package/version and options.
-- Confirm serial baud rate and protocol used by `sendbin.py`.
-- Document whether `8000` is parsed as hexadecimal by `sendbin.py`.
 - Firmware ASM source has not yet been imported into this repository; preserve the distinction between historical commands and the current authoritative source.
