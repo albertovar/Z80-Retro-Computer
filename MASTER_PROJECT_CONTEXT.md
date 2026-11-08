@@ -200,7 +200,7 @@ CRC-16/CCITT-FALSE:
 
 ## Firmware utility scripts
 - Utilities live in `firmware/utils/`: `make_rom.py` and `sendbin.py`.
-- `make_rom.py` pads the assembled image with `00h` to 7FFDh, computes CRC-16/CCITT-FALSE over 0000h–7FFDh and stores the CRC MSB-first at 7FFEh–7FFFh, producing a 32 KiB ROM image.
+- `make_rom.py` takes the assembled binary (e.g. `monitor.bin`), pads it with `00h` through 7FFDh, computes CRC-16/CCITT-FALSE over 0000h–7FFDh, stores the CRC MSB-first at 7FFEh–7FFFh, and writes a 32 KiB output image (e.g. `monitor_CRC.bin`). The monitor uses this CRC to check ROM integrity. **Program the generated `*_CRC.bin` image into the ROM**, not the original assembler output. Example: `python3 make_rom.py monitor.bin monitor_CRC.bin`.
 - `sendbin.py` transfers a binary to the monitor over UART (115200 baud) using the monitor's `loadbin` command and waits for READY and `loadbin complete`.
 - Example: `python3 firmware/utils/sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin`. The address argument is parsed as hexadecimal.
 - In standard memory mode, ROM is mapped at 0000h–7FFFh and SRAM at 8000h–FFFFh; thus the first RAM address is **8000h**.
