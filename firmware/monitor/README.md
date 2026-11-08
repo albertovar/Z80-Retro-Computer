@@ -2,6 +2,41 @@
 
 Add authoritative ASM source here. Prior conversation referenced `Z80_monitor_loadbin.asm`, but it has not been imported here; do not assume this is the latest firmware.
 
+## Memory map
+
+The computer supports two memory configurations. The selected configuration changes how the Z80's 64 KiB address space is mapped.
+
+### Standard mode (ROM enabled)
+
+| Z80 address range | Size | Device | Description |
+|---|---:|---|---|
+| `0000h–7FFFh` | 32 KiB | AT28C256 EEPROM | ROM is mapped at the bottom of the address space. Reset execution starts here. |
+| `8000h–FFFFh` | 32 KiB | SRAM | RAM occupies the upper half of the address space. The first available RAM address is `8000h`. |
+
+**Important:** `7FFFh` is still ROM in standard mode. The stack and writable data must be placed in RAM before using operations such as `CALL`, `PUSH`, or `RET`.
+
+The monitor currently reserves `F000h–FFFFh` for its buffer, variables, and stack (a firmware convention). Consequently, the `sendbin.py` utility limits user binary transfers to `8000h–EFFFh`.
+
+### RAM-only mode (ROM disabled)
+
+| Z80 address range | Size | Device | Description |
+|---|---:|---|---|
+| `0000h–FFFFh` | 64 KiB | SRAM | SRAM is mapped across the entire Z80 address space; ROM is not visible. |
+
+In RAM-only mode, the full 64 KiB address space is RAM. A proposed monitor layout is `0000h–0FFFh` for the monitor and `1000h–FFFFh` for user RAM, but **this layout is only a proposal and has not been implemented or validated**.
+
+### Memory-map comparison
+
+| Feature | Standard mode | RAM-only mode |
+|---|---|---|
+| `0000h–7FFFh` | ROM | SRAM |
+| `8000h–FFFFh` | SRAM | SRAM |
+| Reset vector at `0000h` | ROM | SRAM (must contain valid startup code) |
+| Total addressable RAM | 32 KiB | 64 KiB |
+| `sendbin.py` supported load range | `8000h–EFFFh` | Not currently supported by the utility |
+
+**Note:** `sendbin.py` currently assumes standard mode and validates load addresses in `8000h–EFFFh`. It must be adapted before using it to load binaries in RAM-only mode.
+
 ## Build and ROM programming workflow
 
 The following commands are taken from the user's shell history and represent the **known working workflow**.
