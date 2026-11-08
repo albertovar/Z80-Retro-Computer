@@ -1,0 +1,2 @@
+# Prompt — Z80 Troubleshooting
+Restate symptom and conditions; list confirmed facts and unknowns; avoid disproved causes. Rank hypotheses by evidence. Give one test at a time with exact node/pin, state, expected voltage/polarity and interpretation. Use multimeter, continuity, LEDs, switches/reset. Don't replace/rewire chips without justification. Don't assume timing if polarity/reset/floating inputs/selection/contention aren't checked. Record new measurements after user confirms.
