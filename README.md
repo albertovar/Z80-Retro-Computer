@@ -13,6 +13,34 @@ Documentation for a Z80A-based computer built on a fabricated two-layer PCB.
 - ROM control via 74HC273; Q0 is associated with ROM control, with inversion to obtain effective ROMENABLE.
 - I/O decoding via 74HC138.
 
+### Memory map
+
+The Z80 has a 64 KiB address space. The board supports two memory configurations:
+
+#### Standard mode (ROM enabled)
+
+| Z80 address range | Size | Device | Description |
+|---|---:|---|---|
+| `0000h–7FFFh` | 32 KiB | AT28C256 EEPROM | ROM at the bottom of memory; execution after reset starts here. |
+| `8000h–FFFFh` | 32 KiB | SRAM | RAM in the upper half; first RAM address is `8000h`. |
+
+The monitor reserves `F000h–FFFFh` for its buffer, variables and stack. This is a firmware convention, not a hardware reservation.
+
+#### RAMONLY mode (ROM disabled)
+
+| Z80 address range | Size | Device | Description |
+|---|---:|---|---|
+| `0000h–FFFFh` | 64 KiB | SRAM | SRAM occupies the entire address space; ROM is not visible. |
+
+A proposed RAMONLY software layout is monitor at `0000h–0FFFh` and user RAM at `1000h–FFFFh`. **This layout and the ROM-to-RAM transition are not implemented or validated.**
+
+| Feature | Standard mode | RAMONLY mode |
+|---|---|---|
+| `0000h–7FFFh` | ROM | SRAM |
+| `8000h–FFFFh` | SRAM | SRAM |
+| Reset vector `0000h` | ROM | SRAM (must contain valid startup code) |
+| RAM available in hardware map | 32 KiB | 64 KiB |
+
 | Port range | Peripheral | Decoder output |
 |---|---|---|
 | 00h–07h | WD8250 UART | Y0 |
