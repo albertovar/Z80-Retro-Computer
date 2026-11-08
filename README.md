@@ -2,19 +2,15 @@
 
 ![Z80 Retro Computer — 3D PCB render](docs/images/Z80_mainboard.png)
 
-Documentation for a Z80A-based computer built on a fabricated two-layer PCB.
-
-**Status:** CPU reset/ROM fetch/execution/HALT, ROM/RAM selection, LCD, UART, switches and LEDs have been validated. The RAM-resident monitor and ROM-to-RAM transition are still proposals.
+Zilog Z80A homebrew computer.
 
 ## Architecture
-- CPU: SGS/ST Z8400AB1 Z80A.
-- EEPROM: 28C256, 32 KiB; SRAM: 24512AK, 64 KiB × 8.
+- CPU: SGS/ST Z8400AB1 Z80A, 4/8MHz.
+- ROM: 28C256, 32 KiB;
+- RAM: 24512AK, 64 KiB.
 - Standard mode: ROM at 0000h–7FFFh; SRAM at 8000h–FFFFh.
-- RAMONLY mode: SRAM at 0000h–FFFFh.
-- ROM_CS and RAM_CS are active-low. The current decoder is documented as correct.
-- ROM control via 74HC273; Q0 is associated with ROM control, with inversion to obtain effective ROMENABLE.
-- I/O decoding via 74HC138.
-
+- RAM_ONLY mode: SRAM at 0000h–FFFFh.
+  
 ### Memory map
 
 The Z80 has a 64 KiB address space. The board supports two memory configurations:
@@ -28,13 +24,13 @@ The Z80 has a 64 KiB address space. The board supports two memory configurations
 
 The monitor reserves `F000h–FFFFh` for its buffer, variables and stack. This is a firmware convention, not a hardware reservation.
 
-#### RAMONLY mode (ROM disabled)
+#### RAM_ONLY mode (ROM disabled)
 
 | Z80 address range | Size | Device | Description |
 |---|---:|---|---|
 | `0000h–FFFFh` | 64 KiB | SRAM | SRAM occupies the entire address space; ROM is not visible. |
 
-A proposed RAMONLY software layout is monitor at `0000h–0FFFh` and user RAM at `1000h–FFFFh`. **This layout and the ROM-to-RAM transition are not implemented or validated.**
+A proposed RAM_ONLY software layout is monitor at `0000h–0FFFh` and user RAM at `1000h–FFFFh`. **This layout and the ROM-to-RAM transition are not implemented or validated yet.**
 
 | Feature | Standard mode | RAMONLY mode |
 |---|---|---|
@@ -55,11 +51,11 @@ A proposed RAMONLY software layout is monitor at `0000h–0FFFh` and user RAM at
 | 38h–3Fh | Expansion B | Y7 |
 
 ### Peripherals
-- WD8250: 1.8432 MHz clock, 115200 baud, 8N1, divisor 1; RX/TX tested.
-- LCD: D0–D7 on the Z80 data bus; RS from Q1/pin 5 of the 74HC273; E from Y3 through an inverter; R/W tied to GND.
-- Switches: 74HC244; `/OE = SWITCH_CS OR RD` using a 74HC32; tested.
-- LEDs: port 20h, 74HC273 latch; tested.
-- 82C55 reset is active-high.
+- UART: 1.8432 MHz clock, 115200 baud, 8N1, divisor 1.
+- PPI: 3 port, 8 bits, I/O general purpose.
+- LCD display.
+- 8 bit Switches for general purpose.
+- 8 bit LEDs for general purpose.
 
 ### Boot and monitor
 The planned ROM startup performs LCD/banner display, UART initialization, CRC verification and monitor copying. Proposed RAMONLY layout: monitor at 0000h–0FFFh and user RAM at 1000h–FFFFh. **Not implemented or validated yet.** SRAM A15 gating, the copy algorithm and the ROM-disable trampoline require schematic and ASM review.
