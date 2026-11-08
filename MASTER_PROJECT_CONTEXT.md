@@ -186,6 +186,12 @@ CRC-16/CCITT-FALSE:
 - The Z80 fetches the next instruction after the ROM-control write. Ensure the corresponding SRAM address contains valid continuation code or use a carefully designed trampoline.
 - Verify exact schematic, latch polarity, SRAM pin and source ASM before wiring or coding.
 
+
+## TODO / pending work
+1. **Validate the 82C55 PPI hardware and software.** It has not been tested yet because it was not a priority. Verify basic read/write operation and document the actual port configuration and behavior.
+2. **Validate the ROM-to-RAM switch at address 0000h.** Test whether the spare AND gate intended for the SRAM A15 path, with Z80 A15 and ROM_ENABLE as its inputs, can implement the required ROM-to-RAM switching so execution can begin at SRAM address 0000h. This is a proposal only; verify signal polarity, actual schematic wiring, SRAM address mapping, and the transition before considering it confirmed.
+3. **Adapt a CP/M clone to this Z80 Retro Computer.** Select a suitable clone/version and determine the required memory layout, BIOS/BDOS/CCP integration, UART console support, and boot path once the memory-switching design is validated.
+
 ## Open items / uncertainties
 - Clock discrepancy: earlier notes say 4 MHz; later discussion mentioned 8 MHz. Confirm the actual current clock before relying on it.
 - Inspect current ASM and determine actual resident monitor size.
