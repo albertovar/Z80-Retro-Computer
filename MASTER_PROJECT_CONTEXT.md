@@ -197,3 +197,12 @@ CRC-16/CCITT-FALSE:
 - Inspect current ASM and determine actual resident monitor size.
 - Validate SRAM A15 proposal and ROM/RAM transition.
 - Confirm command set from the latest source.
+
+## Firmware utility scripts
+- Utilities live in `firmware/utils/`: `make_rom.py` and `sendbin.py`.
+- `make_rom.py` pads the assembled image with `00h` to 7FFDh, computes CRC-16/CCITT-FALSE over 0000h–7FFDh and stores the CRC MSB-first at 7FFEh–7FFFh, producing a 32 KiB ROM image.
+- `sendbin.py` transfers a binary to the monitor over UART (115200 baud) using the monitor's `loadbin` command and waits for READY and `loadbin complete`.
+- Example: `python3 firmware/utils/sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin`. The address argument is parsed as hexadecimal.
+- In standard memory mode, ROM is mapped at 0000h–7FFFh and SRAM at 8000h–FFFFh; thus the first RAM address is **8000h**.
+- The current `sendbin.py` restricts the load address to 8000h–EFFFh and prevents transfers crossing F000h, preserving the monitor's reserved F000h–FFFFh area.
+- Requires Python 3 and `pyserial`.
