@@ -33,7 +33,15 @@ The utility is in [`firmware/utils/make_rom.py`](../utils/make_rom.py).
 python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
 ```
 
-Run from the repository root (or adjust the script path if working from another directory). The utility:
+Run from the repository root (or adjust the script path if working from another directory). The utility takes the assembled program binary as input and creates the final ROM image as output. The input file (for example, `monitor.bin`) is **not** the file to program directly into the ROM; program the generated `monitor_CRC.bin` instead. The monitor firmware uses the stored CRC to check ROM integrity.
+
+Example invocation:
+
+```sh
+python3 make_rom.py monitor.bin monitor_CRC.bin
+```
+
+The utility:
 - Rejects input larger than 32766 bytes (7FFEh).
 - Pads the program with `00h` bytes through address 7FFDh.
 - Calculates CRC-16/CCITT-FALSE (initial value `FFFFh`, polynomial `1021h`, MSB-first) over `0000h–7FFDh`.
