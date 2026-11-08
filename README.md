@@ -1,5 +1,7 @@
 # Z80 Retro Computer
 
+![Z80 Retro Computer — 3D PCB render](docs/images/Z80_mainboard.png)
+
 Documentation for a Z80A-based computer built on a fabricated two-layer PCB.
 
 **Status:** CPU reset/ROM fetch/execution/HALT, ROM/RAM selection, LCD, UART, switches and LEDs have been validated. The RAM-resident monitor and ROM-to-RAM transition are still proposals.
