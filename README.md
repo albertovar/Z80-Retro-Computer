@@ -58,7 +58,16 @@ A proposed RAM_ONLY software layout is monitor at `0000h–0FFFh` and user RAM a
 - 8 bit LEDs for general purpose.
 
 ### Boot and monitor
+
 The planned ROM startup performs LCD/banner display, UART initialization, CRC verification and monitor copying. Proposed RAMONLY layout: monitor at 0000h–0FFFh and user RAM at 1000h–FFFFh. **Not implemented or validated yet.** SRAM A15 gating, the copy algorithm and the ROM-disable trampoline require schematic and ASM review.
+
+After initialization, the monitor reports the ROM CRC and RAM test result on the serial console, then displays the command prompt:
+
+![Z80 monitor startup output](docs/images/serial_boot.svg)
+
+The monitor's `help` command lists the available console commands:
+
+![Z80 monitor help output](docs/images/serial_help.svg)
 
 ### ROM CRC
 CRC-16/CCITT-FALSE, initial value FFFFh, polynomial 1021h, MSB-first; covers bytes 0000h–7FFDh; CRC stored at 7FFEh–7FFFh. ROM image is padded to 32768 bytes.
