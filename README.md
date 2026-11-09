@@ -81,6 +81,16 @@ python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
 minipro -p AT28C256 -w monitor_CRC.bin -s
 ```
 
+### Serial console
+
+A serial terminal can be opened with `screen` at 115200 baud:
+
+```sh
+screen /dev/ttyUSB0 115200
+```
+
+Replace `/dev/ttyUSB0` with the serial device assigned to the board if it differs. To exit `screen`, press `Ctrl+A`, then `K`, then confirm with `Y`.
+
 ### Load a binary into SRAM over UART
 
 1. Assemble the test or application ASM source into a binary.
