@@ -63,6 +63,42 @@ The planned ROM startup performs LCD/banner display, UART initialization, CRC ve
 ### ROM CRC
 CRC-16/CCITT-FALSE, initial value FFFFh, polynomial 1021h, MSB-first; covers bytes 0000h–7FFDh; CRC stored at 7FFEh–7FFFh. ROM image is padded to 32768 bytes.
 
+## Programming workflow
+
+The firmware workflow has two paths: creating and programming the boot ROM, and loading test or application binaries into SRAM.
+
+### Build and program the ROM
+
+1. Assemble the monitor ASM source with `z80asm` to produce a raw binary.
+2. Run `firmware/utils/make_rom.py` on that binary. It pads the image to 32 KiB, calculates the CRC-16/CCITT-FALSE value and stores it in the final two bytes.
+3. Program the generated CRC image (not the raw assembler output) into the AT28C256 using the T48 programmer and Minipro.
+
+Example commands (run from the repository root):
+
+```sh
+z80asm -o monitor.bin monitor.asm
+python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
+minipro -p AT28C256 -w monitor_CRC.bin -s
+```
+
+### Load a binary into SRAM over UART
+
+1. Assemble the test or application ASM source into a binary.
+2. Connect to the board's UART (115200 baud, 8N1).
+3. Run `firmware/utils/sendbin.py` with the serial device, hexadecimal load address and binary filename. The script asks the monitor to receive the file, waits for `READY`, transfers the binary and waits for `loadbin complete`.
+
+Example:
+
+```sh
+python3 firmware/utils/sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin
+```
+
+In **standard memory mode**, SRAM starts at `8000h`. The current utility accepts load addresses from `8000h` through `EFFFh` and prevents transfers from entering the monitor's reserved `F000h–FFFFh` area. RAM_ONLY loading is not currently supported by this utility.
+
+Requirements: `z80asm`, Python 3, `pyserial` and `minipro` (with a T48 programmer for EEPROM programming).
+
+See the [monitor firmware README](firmware/monitor/README.md) for the detailed commands, script behavior and implementation notes.
+
 ## Validated status
 Reset, ROM fetch, execution, HALT, ROM/RAM decoding, LCD, UART, switches and LEDs. Available troubleshooting tools: multimeter, continuity checks, switches and LEDs; no oscilloscope or logic analyzer.
 
