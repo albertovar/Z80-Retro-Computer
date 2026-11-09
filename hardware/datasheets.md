@@ -4,7 +4,7 @@ This page collects datasheets and technical references for the main components l
 
 | Component | Datasheet / reference |
 |---|---|
-| Z80A CPU (Z8400) | [Zilog Z80 CPU User Manual (PDF)](https://www.zilog.com/docs/z80/um0080.pdf) — architecture, timing, registers and instruction set. |
+| Z80A CPU (Z8400) | [Zilog Z8400/Z84C00 Z80 CPU Product Specification (PDF)](https://www.zilog.com/docs/z80/z8400.pdf) |
 | AT28C256 EEPROM | [Microchip AT28C256 datasheet (PDF)](http://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
 | W24512AK SRAM | [Winbond W24512A datasheet](https://www.alldatasheet.com/datasheet-pdf/pdf/47634/WINBOND/W24512A.html) |
 | WD8250 UART | Datasheet link pending; the exact manufacturer/variant reference has not yet been recorded in the BOM. |
@@ -14,7 +14,7 @@ This page collects datasheets and technical references for the main components l
 | 74HC273 | [Nexperia 74HC/HCT273 datasheet (PDF)](https://assets.nexperia.com/documents/data-sheet/74HC_HCT273.pdf) |
 | 74HC04 | [Nexperia 74HC/HCT04 datasheet (PDF)](https://assets.nexperia.com/documents/data-sheet/74HC_HCT04.pdf) |
 | 74HC08 | [TI SN74HC08 datasheet (PDF)](https://www.ti.com/lit/ds/symlink/sn74hc08.pdf) |
-| 74HC32 | [TI SN74HC32 datasheet](https://www.ti.com/lit/gpn/sn74HC32) |
+| 74HC32 | [TI SN74HC32 datasheet](https://www.ti.com/lit/gpn/sn74hc32) |
 | 74HC02 | [TI SN74HC02 datasheet](https://www.ti.com/lit/gpn/sn74hc02) |
 | 74HC244 | [Nexperia 74HC/HCT244 datasheet (PDF)](https://assets.nexperia.com/documents/data-sheet/74HC_HCT244.pdf) |
 | L7805 voltage regulator | [ST L7805 datasheet (PDF)](https://www.st.com/resource/en/datasheet/l7805.pdf) |
@@ -26,6 +26,6 @@ The BOM also includes passive components (resistors, capacitors and resistor net
 
 ## Z80 instruction set
 
-- [Zilog Z80 CPU User Manual (UM008011)](https://www.zilog.com/docs/z80/um0080.pdf) — official manual, including the instruction set, addressing modes, flags, timing and opcode information.
+- [Z80 instructions set](https://k1.spdns.de/Develop/Hardware/Infomix/ICs%20computer/Microprocessor/Z80/Z80%20Software%20%2B%20Info/Z80.Instruction%20set.pdf) — instruction reference and opcode information.
+- [Zilog Z80 CPU User Manual (UM008011)](https://www.zilog.com/docs/z80/um0080.pdf) — official CPU manual covering architecture, programming model, timing and operation.
 - [Z80.info](https://www.z80.info/) — online Z80 instruction-set reference and opcode tables.
-
