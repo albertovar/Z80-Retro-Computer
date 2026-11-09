@@ -25,7 +25,4 @@ This page collects datasheets and technical references for the main components l
 The BOM also includes passive components (resistors, capacitors and resistor networks), connectors, a DIP switch and 1.8432 MHz / 4 MHz crystals. Their exact manufacturer part numbers are not specified in the current BOM, so individual datasheet links are not listed.
 
 ## Z80 instruction set
-
-- [Z80 instructions set](https://k1.spdns.de/Develop/Hardware/Infomix/ICs%20computer/Microprocessor/Z80/Z80%20Software%20%2B%20Info/Z80.Instruction%20set.pdf) — instruction reference and opcode information.
-- [Zilog Z80 CPU User Manual (UM008011)](https://www.zilog.com/docs/z80/um0080.pdf) — official CPU manual covering architecture, programming model, timing and operation.
 - [Z80.info](https://www.z80.info/) — online Z80 instruction-set reference and opcode tables.
