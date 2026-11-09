@@ -109,45 +109,11 @@ Requirements: `z80asm`, Python 3, `pyserial` and `minipro` (with a T48 programme
 
 See the [monitor firmware README](firmware/monitor/README.md) for the detailed commands, script behavior and implementation notes.
 
-## Documentation
-
-### Component datasheets
-
-The following references cover the main ICs and modules listed in the hardware BOM (`hardware/schematic/CPU.csv`).
-
-| Component | Datasheet / reference |
-|---|---|
-| Z80A CPU (Z8400) | [Zilog Z80 CPU User Manual (PDF)](https://www.zilog.com/docs/z80/um0080.pdf) — architecture, timing, registers and instruction set. |
-| AT28C256 EEPROM | [Microchip AT28C256 datasheet (PDF)](http://ww1.microchip.com/downloads/en/DeviceDoc/doc0006.pdf) |
-| W24512AK SRAM | [Winbond W24512A datasheet](https://www.alldatasheet.com/datasheet-pdf/pdf/47634/WINBOND/W24512A.html) |
-| WD8250 UART | Datasheet link pending; the exact manufacturer/variant reference has not yet been recorded in the BOM. |
-| 82C55A PPI | [82C55A datasheet (PDF)](http://jap.hu/electronic/8255.pdf) |
-| 74HC14 | [TI SN74HC14 datasheet](https://www.ti.com/lit/gpn/sn74HC14) |
-| 74HC138 | [TI SN74HC138 datasheet (PDF)](https://www.ti.com/lit/ds/symlink/sn74hc138.pdf) |
-| 74HC273 | [Nexperia 74HC/HCT273 datasheet (PDF)](https://assets.nexperia.com/documents/data-sheet/74HC_HCT273.pdf) |
-| 74HC04 | [Nexperia 74HC/HCT04 datasheet (PDF)](https://assets.nexperia.com/documents/data-sheet/74HC_HCT04.pdf) |
-| 74HC08 | [TI SN74HC08 datasheet (PDF)](https://www.ti.com/lit/ds/symlink/sn74hc08.pdf) |
-| 74HC32 | [TI SN74HC32 datasheet](https://www.ti.com/lit/gpn/sn74HC32) |
-| 74HC02 | [TI SN74HC02 datasheet](https://www.ti.com/lit/gpn/sn74hc02) |
-| 74HC244 | [Nexperia 74HC/HCT244 datasheet (PDF)](https://assets.nexperia.com/documents/data-sheet/74HC_HCT244.pdf) |
-| L7805 voltage regulator | [ST L7805 datasheet (PDF)](https://www.st.com/resource/en/datasheet/l7805.pdf) |
-| WC1602A LCD module | [Wincom WC1602A datasheet (PDF)](http://www.wincomlcd.com/pdf/WC1602A-SFYLYHTC06.pdf) |
-| LED bar | [Broadcom LED bar datasheet (PDF)](https://docs.broadcom.com/docs/AV02-1798EN) |
-| Reset pushbutton | [APEM/MEC Multimec switch series datasheet (PDF)](https://www.apem.com/medias/download/MEC_switches_serie_MULTIMEC5E.pdf) |
-
-The BOM also includes standard passive parts (resistors, capacitors, resistor networks), connectors, a DIP switch and 1.8432 MHz / 4 MHz crystals. Their exact manufacturer part numbers are not specified in the current BOM, so individual datasheet links are not listed here. The 74HC138 reference above is for the actual 138 decoder; the BOM's existing URL points to a 238-family document and should not be used for the 74HC138.
-
-### Z80 instruction set
-
-- [Zilog Z80 CPU User Manual (UM008011)](https://www.zilog.com/docs/z80/um0080.pdf) — official CPU manual, including the documented instruction set, addressing modes, flags, timing and opcode information.
-- [Z80 instruction-set reference and opcode tables](https://www.z80.info/) — searchable online reference material and instruction tables.
-
-For project-specific hardware and firmware details, see the architecture documents and the [monitor firmware README](firmware/monitor/README.md).
-
 ## Validated status
 Reset, ROM fetch, execution, HALT, ROM/RAM decoding, LCD, UART, switches and LEDs. Available troubleshooting tools: multimeter, continuity checks, switches and LEDs; no oscilloscope or logic analyzer.
 
 ## Documentation
+- [Component datasheets and Z80 instruction references](hardware/datasheets.md)
 - [Master project context](PROJECT_CONTEXT.md)
 - [Memory map](architecture/memory_map.md)
 - [Memory decoder](architecture/memory_decoder.md)
