@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="230" viewBox="0 0 900 230" role="img" aria-labelledby="title desc">
+<title id="title">Z80 serial terminal startup screen</title><desc id="desc">Serial console output after the Z80 computer initializes.</desc>
+<rect width="900" height="230" rx="12" fill="#111827"/><path d="M0 12a12 12 0 0 1 12-12h876a12 12 0 0 1 12 12v30H0z" fill="#263244"/>
+<circle cx="24" cy="21" r="6" fill="#f87171"/><circle cx="46" cy="21" r="6" fill="#fbbf24"/><circle cx="68" cy="21" r="6" fill="#4ade80"/>
+<text x="450" y="26" fill="#d1d5db" font-family="monospace" font-size="13" text-anchor="middle">Serial terminal — 115200 baud</text>
+<g fill="#e5e7eb" font-family="monospace" font-size="20">
+<text x="30" y="82">Z80 mainboard - AlberTovar@gmail.com - 2026</text>
+<text x="30" y="116">Monitor  v.1.002</text>
+<text x="30" y="150">ROM OK  CRC:B680</text>
+<text x="30" y="184">RAM OK</text>
+<text x="30" y="218">Z80&gt;</text>
+</g></svg>

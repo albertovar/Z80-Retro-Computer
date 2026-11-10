@@ -2,19 +2,15 @@
 
 ![Z80 Retro Computer — 3D PCB render](docs/images/Z80_mainboard.png)
 
-Documentation for a Z80A-based computer built on a fabricated two-layer PCB.
-
-**Status:** CPU reset/ROM fetch/execution/HALT, ROM/RAM selection, LCD, UART, switches and LEDs have been validated. The RAM-resident monitor and ROM-to-RAM transition are still proposals.
+Zilog Z80A homebrew computer.
 
 ## Architecture
-- CPU: SGS/ST Z8400AB1 Z80A.
-- EEPROM: 28C256, 32 KiB; SRAM: 24512AK, 64 KiB × 8.
+- CPU: SGS/ST Z8400AB1 Z80A, 4/8MHz.
+- ROM: 28C256, 32 KiB;
+- RAM: 24512AK, 64 KiB.
 - Standard mode: ROM at 0000h–7FFFh; SRAM at 8000h–FFFFh.
-- RAMONLY mode: SRAM at 0000h–FFFFh.
-- ROM_CS and RAM_CS are active-low. The current decoder is documented as correct.
-- ROM control via 74HC273; Q0 is associated with ROM control, with inversion to obtain effective ROMENABLE.
-- I/O decoding via 74HC138.
-
+- RAM_ONLY mode: SRAM at 0000h–FFFFh.
+  
 ### Memory map
 
 The Z80 has a 64 KiB address space. The board supports two memory configurations:
@@ -28,13 +24,13 @@ The Z80 has a 64 KiB address space. The board supports two memory configurations
 
 The monitor reserves `F000h–FFFFh` for its buffer, variables and stack. This is a firmware convention, not a hardware reservation.
 
-#### RAMONLY mode (ROM disabled)
+#### RAM_ONLY mode (ROM disabled)
 
 | Z80 address range | Size | Device | Description |
 |---|---:|---|---|
 | `0000h–FFFFh` | 64 KiB | SRAM | SRAM occupies the entire address space; ROM is not visible. |
 
-A proposed RAMONLY software layout is monitor at `0000h–0FFFh` and user RAM at `1000h–FFFFh`. **This layout and the ROM-to-RAM transition are not implemented or validated.**
+A proposed RAM_ONLY software layout is monitor at `0000h–0FFFh` and user RAM at `1000h–FFFFh`. **This layout and the ROM-to-RAM transition are not implemented or validated yet.**
 
 | Feature | Standard mode | RAMONLY mode |
 |---|---|---|
@@ -55,22 +51,78 @@ A proposed RAMONLY software layout is monitor at `0000h–0FFFh` and user RAM at
 | 38h–3Fh | Expansion B | Y7 |
 
 ### Peripherals
-- WD8250: 1.8432 MHz clock, 115200 baud, 8N1, divisor 1; RX/TX tested.
-- LCD: D0–D7 on the Z80 data bus; RS from Q1/pin 5 of the 74HC273; E from Y3 through an inverter; R/W tied to GND.
-- Switches: 74HC244; `/OE = SWITCH_CS OR RD` using a 74HC32; tested.
-- LEDs: port 20h, 74HC273 latch; tested.
-- 82C55 reset is active-high.
+- UART: 1.8432 MHz clock, 115200 baud, 8N1, divisor 1.
+- PPI: 3 port, 8 bits, I/O general purpose.
+- LCD display.
+- 8 bit Switches for general purpose.
+- 8 bit LEDs for general purpose.
 
 ### Boot and monitor
+
 The planned ROM startup performs LCD/banner display, UART initialization, CRC verification and monitor copying. Proposed RAMONLY layout: monitor at 0000h–0FFFh and user RAM at 1000h–FFFFh. **Not implemented or validated yet.** SRAM A15 gating, the copy algorithm and the ROM-disable trampoline require schematic and ASM review.
+
+After initialization, the monitor reports the ROM CRC and RAM test result on the serial console, then displays the command prompt:
+
+![Z80 monitor startup output](docs/images/serial_boot.svg)
+
+The monitor's `help` command lists the available console commands:
+
+![Z80 monitor help output](docs/images/serial_help.svg)
 
 ### ROM CRC
 CRC-16/CCITT-FALSE, initial value FFFFh, polynomial 1021h, MSB-first; covers bytes 0000h–7FFDh; CRC stored at 7FFEh–7FFFh. ROM image is padded to 32768 bytes.
+
+## Programming workflow
+
+The firmware workflow has two paths: creating and programming the boot ROM, and loading test or application binaries into SRAM.
+
+### Build and program the ROM
+
+1. Assemble the monitor ASM source with `z80asm` to produce a raw binary.
+2. Run `firmware/utils/make_rom.py` on that binary. It pads the image to 32 KiB, calculates the CRC-16/CCITT-FALSE value and stores it in the final two bytes.
+3. Program the generated CRC image (not the raw assembler output) into the AT28C256 using the T48 programmer and Minipro.
+
+Example commands (run from the repository root):
+
+```sh
+z80asm -o monitor.bin monitor.asm
+python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
+minipro -p AT28C256 -w monitor_CRC.bin -s
+```
+
+### Serial console
+
+A serial terminal can be opened with `screen` at 115200 baud:
+
+```sh
+screen /dev/ttyUSB0 115200
+```
+
+Replace `/dev/ttyUSB0` with the serial device assigned to the board if it differs. To exit `screen`, press `Ctrl+A`, then `K`, then confirm with `Y`.
+
+### Load a binary into SRAM over UART
+
+1. Assemble the test or application ASM source into a binary.
+2. Connect to the board's UART (115200 baud, 8N1).
+3. Run `firmware/utils/sendbin.py` with the serial device, hexadecimal load address and binary filename. The script asks the monitor to receive the file, waits for `READY`, transfers the binary and waits for `loadbin complete`.
+
+Example:
+
+```sh
+python3 firmware/utils/sendbin.py /dev/ttyUSB0 8000 SWITCHES_monitor.bin
+```
+
+In **standard memory mode**, SRAM starts at `8000h`. The current utility accepts load addresses from `8000h` through `EFFFh` and prevents transfers from entering the monitor's reserved `F000h–FFFFh` area. RAM_ONLY loading is not currently supported by this utility.
+
+Requirements: `z80asm`, Python 3, `pyserial` and `minipro` (with a T48 programmer for EEPROM programming).
+
+See the [monitor firmware README](firmware/monitor/README.md) for the detailed commands, script behavior and implementation notes.
 
 ## Validated status
 Reset, ROM fetch, execution, HALT, ROM/RAM decoding, LCD, UART, switches and LEDs. Available troubleshooting tools: multimeter, continuity checks, switches and LEDs; no oscilloscope or logic analyzer.
 
 ## Documentation
+- [Component datasheets and Z80 instruction references](hardware/datasheets.md)
 - [Master project context](PROJECT_CONTEXT.md)
 - [Memory map](architecture/memory_map.md)
 - [Memory decoder](architecture/memory_decoder.md)
