@@ -1,44 +1,45 @@
         ORG 0000h
 
 ; ==========================================
-; PUERTOS DE E/S
+; I/O PORTS
 ; ==========================================
 
-UART:               EQU 00h
-CONTROL:            EQU 10h
+UART_PORT:          EQU 00h
+CONTROL_PORT:       EQU 10h
 LCD_PORT:           EQU 18h
-LEDS:               EQU 20h
+LEDS_PORT:          EQU 20h
+SWITCHES_PORT:      EQU 28h
 
 ; ==========================================
-; VARIABLES EN RAM
+; RAM VARIABLES
 ;
-; F000-F07F: buffer de comandos
-; F080-F081: direccion inicial para DUMP
-; F082-F083: fin (temporalmente) y luego cantidad de bytes
-; F084-F085: direccion de carga
-; F086:      contador de bytes por linea
-; F087-F088: contador de bytes para LOADBIN
+; F000-F07F: command buffer
+; F080-F081: initial address for DUMP
+; F082-F083: end address (temporarily), then byte count
+; F084-F085: load address
+; F086:      byte counter per line
+; F087-F088: byte counter for LOADBIN
 ;
-; LOAD no permite escribir en F000h o mas.
+; LOAD does not allow writes at F000h or above.
 ; ==========================================
 
-CMD_BUFFER:         EQU 0F000h
-DUMP_ADDR:          EQU 0F080h
-DUMP_COUNT:         EQU 0F082h
-LOAD_ADDR:          EQU 0F084h
-DUMP_LINE_COUNT:    EQU 0F086h
-LOADBIN_COUNT:      EQU 0F087h
+COMMAND_BUFFER:         EQU 0F000h
+DUMP_ADDRESS:           EQU 0F080h
+DUMP_BYTE_COUNT:        EQU 0F082h
+LOAD_ADDRESS:           EQU 0F084h
+DUMP_LINE_BYTE_COUNT:   EQU 0F086h
+LOADBIN_BYTE_COUNT:     EQU 0F087h
 
 
 ; ==========================================
-; INICIO
+; STARTUP
 ; ==========================================
 
 START:
         LD SP,0FFFFh
 
         ; ----------------------------------
-        ; Inicializar LCD
+        ; Initialize LCD
         ; ----------------------------------
 
         CALL LCD_INIT
@@ -46,7 +47,7 @@ START:
         LD A,080h
         CALL LCD_CMD
 
-        ; La primera linea del LCD tiene 16 caracteres.
+        ; The first LCD line has 16 characters.
         LD HL,TITLE_TEXT
         CALL LCD_PRINT
 
@@ -62,27 +63,39 @@ START:
         CALL LCD_CMD
 
         ; ----------------------------------
-        ; Inicializar UART: 115200, 8N1
-        ; Reloj: 1.8432 MHz
+        ; LED test
+        ; ----------------------------------
+
+        CALL LED_TEST
+
+        ; ----------------------------------
+        ; Display switches on LEDs
+        ; ----------------------------------
+
+        CALL SWITCHES_TO_LEDS
+
+        ; ----------------------------------
+        ; Initialize UART: 115200, 8N1
+        ; Clock: 1.8432 MHz
         ; ----------------------------------
 
         LD A,080h
-        OUT (UART+3),A
+        OUT (UART_PORT+3),A
 
         LD A,001h
-        OUT (UART+0),A       ; DLL = 1
+        OUT (UART_PORT+0),A       ; DLL = 1
 
         XOR A
-        OUT (UART+1),A       ; DLM = 0
+        OUT (UART_PORT+1),A       ; DLM = 0
 
         LD A,003h
-        OUT (UART+3),A       ; 8N1
+        OUT (UART_PORT+3),A       ; 8N1
 
         XOR A
-        OUT (UART+1),A       ; IER = 0
+        OUT (UART_PORT+1),A       ; IER = 0
 
         ; ----------------------------------
-        ; Mensaje de inicializacion
+        ; Startup message
         ; ----------------------------------
 
         LD HL,START_TEXT
@@ -95,7 +108,7 @@ START:
         CALL SERIAL_PRINT
 
         ; ==================================
-        ; TEST CRC DE ROM
+        ; ROM CRC TEST
         ; ==================================
 
         CALL CHECK_ROM_CRC
@@ -122,27 +135,94 @@ PRINT_ROM_CRC:
         CALL SERIAL_PRINT
 
         ; ==================================
-        ; TEST DE RAM
+        ; RAM TEST
         ; ==================================
 
         JP RAM_TEST
 
 
 ; ==========================================
+; LED TEST
+;
+; Sweep from right to left and back.
+; Turns off all LEDs when finished.
+; ==========================================
+
+LED_TEST:
+        ; Right -> left
+        LD A,080h
+
+LED_TEST_RIGHT:
+        OUT (LEDS_PORT),A
+        CALL LED_TEST_DELAY
+
+        SRL A
+        JR NZ,LED_TEST_RIGHT
+
+        ; Left -> right
+        LD A,002h
+
+LED_TEST_LEFT:
+        OUT (LEDS_PORT),A
+        CALL LED_TEST_DELAY
+
+        SLA A
+        JR NZ,LED_TEST_LEFT
+
+        ; Turn off all LEDs
+        XOR A
+        OUT (LEDS_PORT),A
+        RET
+
+
+LED_TEST_DELAY:
+        LD B,001h
+
+LED_TEST_DELAY_OUTER:
+        LD C,0C8h
+
+LED_TEST_DELAY_MIDDLE:
+        LD D,0FFh
+
+LED_TEST_DELAY_INNER:
+        DEC D
+        JR NZ,LED_TEST_DELAY_INNER
+
+        DEC C
+        JR NZ,LED_TEST_DELAY_MIDDLE
+
+        DJNZ LED_TEST_DELAY_OUTER
+        RET
+
+
+; ==========================================
+; DISPLAY SWITCHES ON LEDs
+;
+; Reads the 8 switches and displays the
+; corresponding byte on the LEDs.
+; ==========================================
+
+SWITCHES_TO_LEDS:
+        IN A,(SWITCHES_PORT)
+        OUT (LEDS_PORT),A
+        RET
+
+
+; ==========================================
 ; CRC-16/CCITT-FALSE
 ;
-; Rango: 0000h - 7FFDh
-; CRC almacenado:
-;   7FFEh = byte alto
-;   7FFFh = byte bajo
+; Range: 0000h - 7FFDh
+; Stored CRC:
+;   7FFEh = high byte
+;   7FFFh = low byte
 ;
-; Polinomio: 1021h
-; Inicial:   FFFFh
+; Polynomial: 1021h
+; Initial:    FFFFh
 ;
-; Salida:
-;   DE = CRC calculado
-;   A  = 00h si correcto
-;   A  = 01h si incorrecto
+; Output:
+;   DE = calculated CRC
+;   A  = 00h if correct
+;   A  = 01h if incorrect
 ; ==========================================
 
 CHECK_ROM_CRC:
@@ -190,7 +270,7 @@ CRC_NEXT_BIT:
         CP 0FEh
         JR NZ,CRC_BYTE
 
-        ; Comparar CRC calculado con ROM
+        ; Compare the calculated CRC with ROM
 
         LD A,(HL)
         CP D
@@ -212,17 +292,17 @@ CRC_BAD:
 
 
 ; ==========================================
-; TEST DE RAM
+; RAM TEST
 ;
-; Rango: 8000h - FFFFh
+; Range: 8000h - FFFFh
 ;
-; La prueba sobrescribe toda la RAM,
-; incluida la pila.
-; No utilizar CALL/RET durante la prueba.
+; The test overwrites all RAM,
+; including the stack.
+; Do not use CALL/RET during the test.
 ; ==========================================
 
 RAM_TEST:
-        ; Escribir FFh en toda la RAM
+        ; Write FFh to all RAM
 
         LD HL,08000h
 
@@ -234,7 +314,7 @@ RAM_WRITE_FF:
         OR L
         JR NZ,RAM_WRITE_FF
 
-        ; Comprobar FFh
+        ; Check FFh
 
         LD HL,08000h
 
@@ -249,7 +329,7 @@ RAM_CHECK_FF:
         OR L
         JR NZ,RAM_CHECK_FF
 
-        ; Escribir 00h en toda la RAM
+        ; Write 00h to all RAM
 
         LD HL,08000h
 
@@ -261,7 +341,7 @@ RAM_WRITE_00:
         OR L
         JR NZ,RAM_WRITE_00
 
-        ; Comprobar 00h
+        ; Check 00h
 
         LD HL,08000h
 
@@ -276,7 +356,7 @@ RAM_CHECK_00:
         OR L
         JR NZ,RAM_CHECK_00
 
-        ; Restaurar pila después de la prueba
+        ; Restore the stack after the test
 
         LD SP,0FFFFh
 
@@ -295,7 +375,7 @@ RAM_ERROR:
 
 
 ; ==========================================
-; BUCLE PRINCIPAL DEL MONITOR
+; MAIN MONITOR LOOP
 ; ==========================================
 
 MONITOR_LOOP:
@@ -304,7 +384,7 @@ MONITOR_LOOP:
 
         CALL READ_LINE
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         CALL SKIP_SPACES
 
         LD A,(HL)
@@ -312,51 +392,51 @@ MONITOR_LOOP:
         JP Z,MONITOR_LOOP
 
         ; ----------------------------------
-        ; Buscar comando help
+        ; Look up the help command
         ; ----------------------------------
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         LD DE,CMD_HELP_WORD
         CALL MATCH_WORD
         JP C,CMD_HELP
 
         ; ----------------------------------
-        ; Buscar comando loadbin
+        ; Look up the loadbin command
         ; ----------------------------------
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         LD DE,CMD_LOADBIN_WORD
         CALL MATCH_WORD
         JP C,CMD_LOADBIN
 
         ; ----------------------------------
-        ; Buscar comando load
+        ; Look up the load command
         ; ----------------------------------
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         LD DE,CMD_LOAD_WORD
         CALL MATCH_WORD
         JP C,CMD_LOAD
 
         ; ----------------------------------
-        ; Buscar comando dump
+        ; Look up the dump command
         ; ----------------------------------
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         LD DE,CMD_DUMP_WORD
         CALL MATCH_WORD
         JP C,CMD_DUMP
 
         ; ----------------------------------
-        ; Buscar comando go
+        ; Look up the go command
         ; ----------------------------------
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         LD DE,CMD_GO_WORD
         CALL MATCH_WORD
         JP C,CMD_GO
 
-        ; Comando desconocido
+        ; Unknown command
 
         LD HL,UNKNOWN_TEXT
         CALL SERIAL_PRINT
@@ -365,8 +445,8 @@ MONITOR_LOOP:
 
 
 ; ==========================================
-; COMANDO: help
-; Mostrar los comandos disponibles.
+; COMMAND: help
+; Display the available commands.
 ; ==========================================
 
 CMD_HELP:
@@ -376,10 +456,10 @@ CMD_HELP:
 
 
 ; ==========================================
-; COMANDO: go AAAA
+; COMMAND: go AAAA
 ;
-; Ejecutar desde la direccion indicada.
-; Ejemplo: go 8000
+; Execute from the specified address.
+; Example: go 8000
 ; ==========================================
 
 CMD_GO:
@@ -392,54 +472,54 @@ CMD_GO:
         OR A
         JP NZ,CMD_BAD_ARGS
 
-        ; DE contiene la direccion de destino.
-        ; Dejar una direccion de retorno en la pila para que
-        ; el programa cargado pueda volver con RET.
+        ; DE contains the target address.
+        ; Place a return address on the stack so that
+        ; the loaded program can return with RET.
 
         LD HL,GO_RETURN
         PUSH HL
         EX DE,HL
         JP (HL)
 
-; El programa cargado vuelve aqui ejecutando RET.
-; No reinicializa el sistema ni borra la RAM.
+; The loaded program returns here by executing RET.
+; It does not reinitialize the system or clear RAM.
 GO_RETURN:
         JP MONITOR_LOOP
 
 
 ; ==========================================
-; COMANDO: dump AAAA BBBB
+; COMMAND: dump AAAA BBBB
 ;
-; AAAA = direccion inicial
-; BBBB = direccion final (incluida)
+; AAAA = initial address
+; BBBB = final address (inclusive)
 ;
-; Ejemplo: dump 8000 8100
+; Example: dump 8000 8100
 ; ==========================================
 
 CMD_DUMP:
         CALL PARSE_HEX16
         JP NC,CMD_BAD_ARGS
 
-        ; Guardar direccion inicial
+        ; Save initial address
 
         PUSH HL
         EX DE,HL
-        LD (DUMP_ADDR),HL
+        LD (DUMP_ADDRESS),HL
         EX DE,HL
         POP HL
 
         CALL SKIP_SPACES
 
-        ; Leer direccion final
+        ; Read final address
 
         CALL PARSE_HEX16
         JP NC,CMD_BAD_ARGS
 
-        ; Guardar temporalmente la direccion final
+        ; Temporarily save final address
 
         PUSH HL
         EX DE,HL
-        LD (DUMP_COUNT),HL
+        LD (DUMP_BYTE_COUNT),HL
         EX DE,HL
         POP HL
 
@@ -449,38 +529,38 @@ CMD_DUMP:
         OR A
         JP NZ,CMD_BAD_ARGS
 
-        ; Calcular cantidad = final - inicial + 1
+        ; Calculate count = final - initial + 1
 
-        LD HL,(DUMP_COUNT)
-        LD DE,(DUMP_ADDR)
+        LD HL,(DUMP_BYTE_COUNT)
+        LD DE,(DUMP_ADDRESS)
         OR A
         SBC HL,DE
-        JP C,CMD_BAD_ARGS       ; final menor que inicial
+        JP C,CMD_BAD_ARGS       ; final lower than initial
 
         INC HL
         LD A,H
         OR L
-        JP Z,CMD_BAD_ARGS       ; evita el rango 0000-FFFF (65536 bytes)
+        JP Z,CMD_BAD_ARGS       ; avoids the 0000h-FFFFh range (65536 bytes)
 
-        LD (DUMP_COUNT),HL
+        LD (DUMP_BYTE_COUNT),HL
         JP DUMP_LOOP
 
 
 ; ==========================================
-; VOLCADO DE MEMORIA
+; MEMORY DUMP
 ;
-; Muestra hasta 16 bytes por linea.
+; Displays up to 16 bytes per line.
 ; ==========================================
 
 DUMP_LOOP:
-        LD HL,(DUMP_COUNT)
+        LD HL,(DUMP_BYTE_COUNT)
 
         LD A,H
         OR L
         JP Z,DUMP_DONE
 
-        ; Calcular bytes de esta linea:
-        ; minimo entre 16 y bytes restantes.
+        ; Calculate bytes for this line:
+        ; minimum of 16 and remaining bytes.
 
         LD A,H
         OR A
@@ -490,17 +570,17 @@ DUMP_LOOP:
         CP 010h
         JR NC,DUMP_SET_16
 
-        LD (DUMP_LINE_COUNT),A
+        LD (DUMP_LINE_BYTE_COUNT),A
         JR DUMP_PRINT_LINE
 
 DUMP_SET_16:
         LD A,010h
-        LD (DUMP_LINE_COUNT),A
+        LD (DUMP_LINE_BYTE_COUNT),A
 
 DUMP_PRINT_LINE:
-        ; Imprimir direccion
+        ; Print address
 
-        LD HL,(DUMP_ADDR)
+        LD HL,(DUMP_ADDRESS)
 
         LD A,H
         CALL PRINT_HEX8
@@ -512,36 +592,36 @@ DUMP_PRINT_LINE:
         CALL SERIAL_PRINT
 
 DUMP_BYTE_LOOP:
-        LD A,(DUMP_LINE_COUNT)
+        LD A,(DUMP_LINE_BYTE_COUNT)
         OR A
         JR Z,DUMP_LINE_END
 
-        ; Leer e imprimir byte
+        ; Read and print byte
 
-        LD HL,(DUMP_ADDR)
+        LD HL,(DUMP_ADDRESS)
         LD A,(HL)
         CALL PRINT_HEX8
 
         LD A,020h
         CALL UART_PUTC
 
-        ; Incrementar direccion
+        ; Increment address
 
-        LD HL,(DUMP_ADDR)
+        LD HL,(DUMP_ADDRESS)
         INC HL
-        LD (DUMP_ADDR),HL
+        LD (DUMP_ADDRESS),HL
 
-        ; Decrementar numero de bytes restantes
+        ; Decrement remaining byte count
 
-        LD HL,(DUMP_COUNT)
+        LD HL,(DUMP_BYTE_COUNT)
         DEC HL
-        LD (DUMP_COUNT),HL
+        LD (DUMP_BYTE_COUNT),HL
 
-        ; Decrementar contador de linea
+        ; Decrement line counter
 
-        LD A,(DUMP_LINE_COUNT)
+        LD A,(DUMP_LINE_BYTE_COUNT)
         DEC A
-        LD (DUMP_LINE_COUNT),A
+        LD (DUMP_LINE_BYTE_COUNT),A
 
         JR DUMP_BYTE_LOOP
 
@@ -556,25 +636,25 @@ DUMP_DONE:
 
 
 ; ==========================================
-; COMANDO: loadbin AAAA NNNN
+; COMMAND: loadbin AAAA NNNN
 ;
-; AAAA = direccion inicial de RAM
-; NNNN = numero de bytes que se recibiran
+; AAAA = initial RAM address
+; NNNN = number of bytes to receive
 ;
-; Tras enviar READY, recibe exactamente NNNN
-; bytes binarios por UART. Cualquier valor,
-; incluidos 00h, 0Ah y 0Dh, es un dato valido.
+; After sending READY, receives exactly NNNN
+; binary bytes through UART. Any value,
+; including 00h, 0Ah, and 0Dh, is valid data.
 ;
-; Rango permitido: 8000h - EFFFh.
+; Allowed range: 8000h - EFFFh.
 ; ==========================================
 
 CMD_LOADBIN:
-        ; Leer direccion inicial
+        ; Read initial address
 
         CALL PARSE_HEX16
         JP NC,CMD_BAD_ARGS
 
-        ; Direccion inicial >= 8000h y < F000h
+        ; Initial address >= 8000h and < F000h
 
         LD A,D
         CP 080h
@@ -582,49 +662,49 @@ CMD_LOADBIN:
         CP 0F0h
         JP NC,LOAD_RANGE_ERROR
 
-        ; Guardar direccion inicial
+        ; Save initial address
 
         PUSH HL
         EX DE,HL
-        LD (LOAD_ADDR),HL
+        LD (LOAD_ADDRESS),HL
         EX DE,HL
         POP HL
 
         CALL SKIP_SPACES
 
-        ; Leer numero de bytes
+        ; Read byte count
 
         CALL PARSE_HEX16
         JP NC,CMD_BAD_ARGS
 
-        ; Longitud cero no permitida
+        ; Zero length is not allowed
 
         LD A,D
         OR E
         JP Z,CMD_BAD_ARGS
 
-        ; Guardar longitud
+        ; Save length
 
         PUSH HL
         EX DE,HL
-        LD (LOADBIN_COUNT),HL
+        LD (LOADBIN_BYTE_COUNT),HL
         EX DE,HL
         POP HL
 
         CALL SKIP_SPACES
 
-        ; No admitir argumentos adicionales
+        ; Do not allow additional arguments
 
         LD A,(HL)
         OR A
         JP NZ,CMD_BAD_ARGS
 
-        ; Comprobar que direccion + longitud
-        ; no sobrepasa F000h. F000h exclusivo
-        ; es valido como limite final.
+        ; Check that address + length does not
+        ; exceed F000h. Exclusive F000h is
+        ; valid as the final limit.
 
-        LD HL,(LOAD_ADDR)
-        LD DE,(LOADBIN_COUNT)
+        LD HL,(LOAD_ADDRESS)
+        LD DE,(LOADBIN_BYTE_COUNT)
         ADD HL,DE
         JP C,LOAD_RANGE_ERROR
 
@@ -638,13 +718,13 @@ CMD_LOADBIN:
         JP NZ,LOAD_RANGE_ERROR
 
 LOADBIN_RANGE_OK:
-        ; Avisar al emisor antes de recibir datos.
+        ; Notify the sender before receiving data.
 
         LD HL,LOADBIN_READY_TEXT
         CALL SERIAL_PRINT
 
-        LD HL,(LOAD_ADDR)
-        LD BC,(LOADBIN_COUNT)
+        LD HL,(LOAD_ADDRESS)
+        LD BC,(LOADBIN_BYTE_COUNT)
 
 LOADBIN_RECEIVE:
         CALL UART_GETC
@@ -662,17 +742,17 @@ LOADBIN_RECEIVE:
 
 
 ; ==========================================
-; COMANDO: load AAAA
+; COMMAND: load AAAA
 ;
-; Ejemplo:
+; Example:
 ;   load 8000
 ;   3E 41 D3 20 76
 ;   .
 ;
-; Carga bytes hexadecimales en RAM.
-; El punto termina la carga.
+; Loads hexadecimal bytes into RAM.
+; A period ends the load.
 ;
-; Rango permitido de destino:
+; Allowed destination range:
 ;   8000h - EFFFh
 ; ==========================================
 
@@ -680,23 +760,23 @@ CMD_LOAD:
         CALL PARSE_HEX16
         JP NC,CMD_BAD_ARGS
 
-        ; La RAM comienza en 8000h
+        ; RAM starts at 8000h
 
         LD A,D
         CP 080h
         JP C,LOAD_RANGE_ERROR
 
-        ; Reservamos F000h en adelante
-        ; para el buffer y las variables.
+        ; Reserve F000h and above
+        ; for the buffer and variables.
 
         CP 0F0h
         JP NC,LOAD_RANGE_ERROR
 
-        ; Guardar direccion de destino
+        ; Save destination address
 
         PUSH HL
         EX DE,HL
-        LD (LOAD_ADDR),HL
+        LD (LOAD_ADDRESS),HL
         EX DE,HL
         POP HL
 
@@ -715,10 +795,10 @@ LOAD_LINE:
 
         CALL READ_LINE
 
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         CALL SKIP_SPACES
 
-        ; ¿Es una linea con solamente un punto?
+        ; Is this a line containing only a period?
 
         LD A,(HL)
         CP 02Eh
@@ -735,7 +815,7 @@ LOAD_LINE:
 
 
 ; ==========================================
-; PROCESAR LINEA DE BYTES HEXADECIMALES
+; PROCESS A LINE OF HEXADECIMAL BYTES
 ; ==========================================
 
 LOAD_PARSE_BYTES:
@@ -745,7 +825,7 @@ LOAD_PARSE_BYTES:
         OR A
         JP Z,LOAD_LINE
 
-        ; Primer digito hexadecimal
+        ; First hexadecimal digit
 
         CALL HEX_TO_NIBBLE
         JP NC,LOAD_BAD_DATA
@@ -753,7 +833,7 @@ LOAD_PARSE_BYTES:
         LD C,A
         INC HL
 
-        ; Segundo digito hexadecimal
+        ; Second hexadecimal digit
 
         LD A,(HL)
         CALL HEX_TO_NIBBLE
@@ -761,7 +841,7 @@ LOAD_PARSE_BYTES:
 
         LD B,A
 
-        ; Combinar los dos nibbles
+        ; Combine the two nibbles
 
         LD A,C
 
@@ -775,8 +855,8 @@ LOAD_PARSE_BYTES:
 
         INC HL
 
-        ; Despues del byte debe haber:
-        ; espacio o fin de linea.
+        ; The byte must be followed by:
+        ; a space or end of line.
 
         LD A,(HL)
         OR A
@@ -786,23 +866,23 @@ LOAD_PARSE_BYTES:
         JP NZ,LOAD_BAD_DATA
 
 LOAD_STORE_BYTE:
-        ; No escribir en F000h o superior.
+        ; Do not write at F000h or above.
 
-        LD A,(LOAD_ADDR+1)
+        LD A,(LOAD_ADDRESS+1)
         CP 0F0h
         JP NC,LOAD_RANGE_ERROR
 
-        ; Guardar byte en la direccion actual.
+        ; Store byte at the current address.
 
         LD A,C
 
         PUSH HL
 
-        LD HL,(LOAD_ADDR)
+        LD HL,(LOAD_ADDRESS)
         LD (HL),A
 
         INC HL
-        LD (LOAD_ADDR),HL
+        LD (LOAD_ADDRESS),HL
 
         POP HL
 
@@ -829,7 +909,7 @@ LOAD_RANGE_ERROR:
 
 
 ; ==========================================
-; ERROR DE SINTAXIS
+; SYNTAX ERROR
 ; ==========================================
 
 CMD_BAD_ARGS:
@@ -840,16 +920,16 @@ CMD_BAD_ARGS:
 
 
 ; ==========================================
-; COMPARAR COMANDO
+; MATCH COMMAND
 ;
-; Entrada:
-;   HL = buffer de entrada
-;   DE = palabra a comparar
+; Input:
+;   HL = input buffer
+;   DE = word to compare
 ;
-; Salida:
-;   Carry = 1 si coincide
-;   HL apunta a los argumentos,
-;   despues de saltar espacios.
+; Output:
+;   Carry = 1 if it matches
+;   HL points to the arguments,
+;   after skipping spaces.
 ; ==========================================
 
 MATCH_WORD:
@@ -894,17 +974,17 @@ MATCH_WORD_NO:
 
 
 ; ==========================================
-; LEER LINEA DEL TERMINAL
+; READ LINE FROM TERMINAL
 ;
-; Termina con CR.
-; Ignora LF.
-; Admite retroceso mediante Backspace.
+; Ends with CR.
+; Ignores LF.
+; Supports deletion with Backspace.
 ;
-; Maximo: 127 caracteres.
+; Maximum: 127 characters.
 ; ==========================================
 
 READ_LINE:
-        LD HL,CMD_BUFFER
+        LD HL,COMMAND_BUFFER
         LD B,07Fh
 
 READ_CHAR:
@@ -922,14 +1002,14 @@ READ_CHAR:
         CP 07Fh
         JR Z,READ_BACKSPACE
 
-        ; Conservar el caracter mientras comprobamos el buffer.
+        ; Preserve the character while checking the buffer.
         PUSH AF
         LD A,B
         OR A
         JR Z,READ_BUFFER_FULL
         POP AF
 
-        ; Eco y almacenamiento del caracter recibido.
+        ; Echo and store the received character.
         CALL UART_PUTC
         LD (HL),A
         INC HL
@@ -941,7 +1021,7 @@ READ_BUFFER_FULL:
         JR READ_CHAR
 
 READ_BACKSPACE:
-        ; No retroceder antes del inicio del buffer.
+        ; Do not move before the start of the buffer.
         LD A,L
         OR A
         JR Z,READ_CHAR
@@ -972,30 +1052,30 @@ READ_DONE:
         RET
 
 ; ==========================================
-; LEER UN CARACTER DE LA UART
-; Salida: A = caracter recibido
+; READ A CHARACTER FROM UART
+; Output: A = received character
 ; ==========================================
 
 UART_GETC:
 UART_WAIT_RX:
-        IN A,(UART+5)
+        IN A,(UART_PORT+5)
         BIT 0,A
         JR Z,UART_WAIT_RX
 
-        IN A,(UART+0)
+        IN A,(UART_PORT+0)
         RET
 
 
 ; ==========================================
-; PARSEAR NUMERO HEXADECIMAL DE 16 BITS
+; PARSE 16-BIT HEXADECIMAL NUMBER
 ;
-; Entrada:
-;   HL apunta a cuatro digitos hex.
+; Input:
+;   HL points to four hexadecimal digits.
 ;
-; Salida:
-;   DE = valor convertido
-;   HL avanza cuatro caracteres
-;   Carry = 1 si valido
+; Output:
+;   DE = converted value
+;   HL advances by four characters
+;   Carry = 1 if valid
 ; ==========================================
 
 PARSE_HEX16:
@@ -1009,7 +1089,7 @@ PARSE_HEX16_LOOP:
 
         LD C,A
 
-        ; Desplazar DE cuatro bits a la izquierda.
+        ; Shift DE left by four bits.
 
         SLA E
         RL D
@@ -1023,7 +1103,7 @@ PARSE_HEX16_LOOP:
         SLA E
         RL D
 
-        ; Incorporar el nuevo nibble.
+        ; Add the new nibble.
 
         LD A,E
         OR C
@@ -1041,11 +1121,11 @@ PARSE_HEX16_BAD:
 
 
 ; ==========================================
-; CONVERTIR CARACTER HEXADECIMAL
+; CONVERT HEXADECIMAL CHARACTER
 ;
-; Entrada: A = caracter ASCII
-; Salida:  A = valor 0..15
-;          Carry = 1 si valido
+; Input: A = ASCII character
+; Output: A = value 0..15
+;         Carry = 1 if valid
 ; ==========================================
 
 HEX_TO_NIBBLE:
@@ -1067,21 +1147,21 @@ HEX_TO_NIBBLE:
         CP 067h
         JR NC,HEX_INVALID
 
-        ; Letras minusculas a-f
+        ; Lowercase letters a-f
 
         SUB 057h
         SCF
         RET
 
 HEX_UPPER:
-        ; Letras mayusculas A-F
+        ; Uppercase letters A-F
 
         SUB 037h
         SCF
         RET
 
 HEX_NUMERIC:
-        ; Digitos 0-9
+        ; Digits 0-9
 
         SUB 030h
         SCF
@@ -1093,11 +1173,11 @@ HEX_INVALID:
 
 
 ; ==========================================
-; SALTAR ESPACIOS
+; SKIP SPACES
 ;
-; Entrada: HL apunta al texto.
-; Salida: HL apunta al siguiente caracter
-;         distinto de espacio.
+; Input: HL points to the text.
+; Output: HL points to the next character
+;         that is not a space.
 ; ==========================================
 
 SKIP_SPACES:
@@ -1110,7 +1190,7 @@ SKIP_SPACES:
 
 
 ; ==========================================
-; INICIALIZACION DEL LCD HD44780
+; HD44780 LCD INITIALIZATION
 ; ==========================================
 
 LCD_INIT:
@@ -1128,18 +1208,18 @@ LCD_INIT:
         CALL LCD_CMD
         CALL DELAY_LONG
 
-        ; Display apagado
+        ; Display off
 
         LD A,008h
         CALL LCD_CMD
 
-        ; Borrar pantalla
+        ; Clear display
 
         LD A,001h
         CALL LCD_CMD
         CALL DELAY_LONG
 
-        ; Modo de entrada
+        ; Entry mode
 
         LD A,006h
         CALL LCD_CMD
@@ -1148,15 +1228,15 @@ LCD_INIT:
 
 
 ; ==========================================
-; ENVIAR COMANDO AL LCD
-; Entrada: A = comando
+; SEND LCD COMMAND
+; Input: A = command
 ; ==========================================
 
 LCD_CMD:
         LD B,A
 
         XOR A
-        OUT (CONTROL),A
+        OUT (CONTROL_PORT),A
 
         LD A,B
         OUT (LCD_PORT),A
@@ -1166,15 +1246,15 @@ LCD_CMD:
 
 
 ; ==========================================
-; ENVIAR DATO AL LCD
-; Entrada: A = caracter
+; SEND LCD DATA
+; Input: A = character
 ; ==========================================
 
 LCD_DATA:
         LD B,A
 
         LD A,002h
-        OUT (CONTROL),A
+        OUT (CONTROL_PORT),A
 
         LD A,B
         OUT (LCD_PORT),A
@@ -1184,9 +1264,9 @@ LCD_DATA:
 
 
 ; ==========================================
-; IMPRIMIR CADENA EN LCD
-; Entrada: HL = direccion
-; Terminador: 00h
+; PRINT STRING ON LCD
+; Input: HL = address
+; Terminator: 00h
 ; ==========================================
 
 LCD_PRINT:
@@ -1202,9 +1282,9 @@ LCD_PRINT_LOOP:
 
 
 ; ==========================================
-; IMPRIMIR CADENA POR UART
-; Entrada: HL = direccion
-; Terminador: 00h
+; PRINT STRING THROUGH UART
+; Input: HL = address
+; Terminator: 00h
 ; ==========================================
 
 SERIAL_PRINT:
@@ -1220,27 +1300,27 @@ SERIAL_PRINT_LOOP:
 
 
 ; ==========================================
-; TRANSMITIR CARACTER POR UART
-; Entrada: A = caracter
+; TRANSMIT CHARACTER THROUGH UART
+; Input: A = character
 ; ==========================================
 
 UART_PUTC:
         LD C,A
 
 UART_WAIT_TX:
-        IN A,(UART+5)
+        IN A,(UART_PORT+5)
         BIT 5,A
         JR Z,UART_WAIT_TX
 
         LD A,C
-        OUT (UART+0),A
+        OUT (UART_PORT+0),A
 
         RET
 
 
 ; ==========================================
-; IMPRIMIR BYTE COMO DOS DIGITOS HEX
-; Entrada: A = byte
+; PRINT BYTE AS TWO HEX DIGITS
+; Input: A = byte
 ; ==========================================
 
 PRINT_HEX8:
@@ -1262,8 +1342,8 @@ PRINT_HEX8:
 
 
 ; ==========================================
-; IMPRIMIR DIGITO HEXADECIMAL
-; Entrada: A = 0..15
+; PRINT HEXADECIMAL DIGIT
+; Input: A = 0..15
 ; ==========================================
 
 PRINT_HEX_DIGIT:
@@ -1280,7 +1360,7 @@ HEX_DIGIT_NUM:
 
 
 ; ==========================================
-; RETARDOS LCD
+; LCD DELAYS
 ; ==========================================
 
 DELAY_SHORT:
@@ -1314,7 +1394,7 @@ DELAY_LONG_LOOP:
 
 
 ; ==========================================
-; TEXTOS LCD
+; LCD TEXT
 ; ==========================================
 
 TITLE_TEXT:
@@ -1325,11 +1405,10 @@ MONITOR_PREFIX:
 
 ; Version
 VERSION_TEXT:
-        DB "v.1.002",00h
-
+        DB "v.1.003",00h
 
 ; ==========================================
-; TEXTOS SERIE
+; SERIAL TEXT
 ; ==========================================
 
 START_TEXT:
@@ -1359,12 +1438,12 @@ UNKNOWN_TEXT:
         DB "unknown command",0Dh,0Ah,00h
 
 HELP_TEXT:
-        DB "Commands:",0Dh,0Ah
-        DB "  help            - show this help",0Dh,0Ah
-        DB "  load AAAA       - load hex bytes into RAM",0Dh,0Ah
-        DB "  loadbin AAAA NNNN - receive NNNN binary bytes",0Dh,0Ah
-        DB "  dump AAAA BBBB  - dump memory range",0Dh,0Ah
-        DB "  go AAAA         - execute at address",0Dh,0Ah,00h
+        DB "Available commands  :",0Dh,0Ah
+        DB "  help              - Show this help",0Dh,0Ah
+        DB "  load AAAA         - Load hex bytes from AAAA address RAM (interactive)",0Dh,0Ah
+        DB "  loadbin AAAA NNNN - Receive NNNN binary bytes",0Dh,0Ah
+        DB "  dump AAAA BBBB    - Dump memory range from AAAA to BBBB",0Dh,0Ah
+        DB "  go AAAA           - Execute at address AAAA",0Dh,0Ah,00h
 
 SYNTAX_ERROR_TEXT:
         DB "syntax error",0Dh,0Ah,00h
