@@ -85,9 +85,9 @@ The firmware workflow has two paths: creating and programming the boot ROM, and 
 Example commands (run from the repository root):
 
 ```sh
-z80asm -o monitor.bin monitor.asm
-python3 firmware/utils/make_rom.py monitor.bin monitor_CRC.bin
-minipro -p AT28C256 -w monitor_CRC.bin -s
+z80asm -o firmware/monitor/monitor.bin firmware/monitor/monitor.asm
+python3 firmware/utils/make_rom.py firmware/monitor/monitor.bin firmware/monitor/monitor_CRC.bin
+minipro -p AT28C256 -w firmware/monitor/monitor_CRC.bin -s
 ```
 
 ### Serial console
