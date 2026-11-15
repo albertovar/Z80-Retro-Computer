@@ -7,8 +7,7 @@
 	(title_block
 		(title "Programmable Peripheral Interface")
 		(date "2026-07-19")
-		(comment 1 "4 MHz Z80A System")
-		(comment 2 "Documentation: ARCHITECTURE.md")
+		(comment 1 "8 MHz Z80A System")
 	)
 	(lib_symbols
 		(symbol "Device:C"

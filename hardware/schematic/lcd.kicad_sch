@@ -4,6 +4,10 @@
 	(generator_version "10.0")
 	(uuid "49137277-416a-4c43-9f93-8d4bb7c5001e")
 	(paper "A4")
+	(title_block
+		(title "LCD")
+		(comment 1 "8 MHz Z80A System")
+	)
 	(lib_symbols
 		(symbol "74xx:74HC04"
 			(exclude_from_sim no)

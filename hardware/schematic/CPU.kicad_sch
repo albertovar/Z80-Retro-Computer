@@ -8,7 +8,7 @@
 		(title "CPU, reset and clock")
 		(date "2026-07-12")
 		(rev "1.00")
-		(comment 1 "4 MHz Z80A System")
+		(comment 1 "8 MHz Z80A System")
 	)
 	(lib_symbols
 		(symbol "74xx:74HC14"

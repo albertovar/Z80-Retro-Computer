@@ -7,8 +7,7 @@
 	(title_block
 		(title "IO Decoder")
 		(date "2026-07-19")
-		(comment 1 "4 MHz Z80A System")
-		(comment 2 "Documentation: ARCHITECTURE.md")
+		(comment 1 "8 MHz Z80A System")
 	)
 	(lib_symbols
 		(symbol "74xx:74HC138"
@@ -2276,6 +2275,30 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "ea63a7ed-debd-45ef-b32e-801bbf65f919")
+	)
+	(no_connect
+		(at 161.29 138.43)
+		(uuid "66930225-8c8c-46e4-ab7a-dc0b127bb5b5")
+	)
+	(no_connect
+		(at 161.29 133.35)
+		(uuid "71bee4dc-edfb-4307-962d-ccb79eaacaca")
+	)
+	(no_connect
+		(at 161.29 140.97)
+		(uuid "7c3b5533-cdbb-4d36-b7e1-02f3335ca6de")
+	)
+	(no_connect
+		(at 161.29 135.89)
+		(uuid "9e1a1227-a74e-4fd2-8d23-1b0c931f6dc4")
+	)
+	(no_connect
+		(at 161.29 146.05)
+		(uuid "c9f2644c-3689-4db9-adbe-12bf79809756")
+	)
+	(no_connect
+		(at 161.29 143.51)
+		(uuid "f65b9677-112e-4d7a-a47b-2007600d00e9")
 	)
 	(bus_entry
 		(at 129.54 133.35)

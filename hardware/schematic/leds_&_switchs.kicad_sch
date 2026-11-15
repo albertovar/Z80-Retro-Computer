@@ -4,6 +4,10 @@
 	(generator_version "10.0")
 	(uuid "6610faa2-1387-4359-93b5-402b1dd5724e")
 	(paper "A4")
+	(title_block
+		(title "General purpose LEDs and switchs")
+		(comment 1 "8 MHz Z80A System")
+	)
 	(lib_symbols
 		(symbol "74xx:74HC02"
 			(body_styles demorgan)

@@ -7,8 +7,7 @@
 	(title_block
 		(title "UART")
 		(date "2026-07-19")
-		(comment 1 "4 MHz Z80A System")
-		(comment 2 "Documentation: ARCHITECTURE.md")
+		(comment 1 "8 MHz Z80A System")
 	)
 	(lib_symbols
 		(symbol "Device:C"
@@ -1643,6 +1642,34 @@
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "d6176e61-a228-46ba-9889-1a5363c0acc4")
+	)
+	(no_connect
+		(at 198.12 121.92)
+		(uuid "065be54b-99a2-4bea-b104-6a6305ffaf1b")
+	)
+	(no_connect
+		(at 198.12 93.98)
+		(uuid "1281cf2c-a75a-4d5f-8a15-6d1814f87520")
+	)
+	(no_connect
+		(at 198.12 88.9)
+		(uuid "59474810-4384-4d31-818e-a06cc4ff5879")
+	)
+	(no_connect
+		(at 196.85 101.6)
+		(uuid "85ab762f-21f8-43bd-b78c-32247ca4966f")
+	)
+	(no_connect
+		(at 198.12 91.44)
+		(uuid "993a9ad3-06ef-49cd-b19b-546390972c26")
+	)
+	(no_connect
+		(at 198.12 96.52)
+		(uuid "da0152fd-d992-429a-b13f-a975053df659")
+	)
+	(no_connect
+		(at 198.12 124.46)
+		(uuid "e4424f48-279a-402b-8ed4-2248938cb9fb")
 	)
 	(bus_entry
 		(at 137.16 83.82)

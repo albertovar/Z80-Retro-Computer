@@ -7,8 +7,7 @@
 	(title_block
 		(title "Memory decoder")
 		(date "2026-07-19")
-		(comment 1 "4 MHz Z80A System")
-		(comment 2 "Documentation: ARCHITECTURE.md")
+		(comment 1 "8 MHz Z80A System")
 	)
 	(lib_symbols
 		(symbol "74xx:74HC04"
@@ -2900,12 +2899,6 @@
 		(uuid "ebd9a47e-93af-40d2-bae8-ec2193fcee24")
 	)
 	(junction
-		(at 148.59 73.66)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "f1f09e68-3568-4a12-939b-92db7f9c2b18")
-	)
-	(junction
 		(at 109.22 58.42)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2914,10 +2907,6 @@
 	(no_connect
 		(at 204.47 49.53)
 		(uuid "3e4a5885-2541-444f-9262-fc2b287f40b7")
-	)
-	(no_connect
-		(at 167.64 71.12)
-		(uuid "454fe838-7b70-4dc5-8f28-f23fceb351e7")
 	)
 	(no_connect
 		(at 204.47 68.58)
@@ -3051,16 +3040,6 @@
 			(type default)
 		)
 		(uuid "43bbcb02-fdf5-4639-b32c-67c128316da4")
-	)
-	(wire
-		(pts
-			(xy 148.59 78.74) (xy 148.59 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "48230b3a-0d63-4223-8748-9443e599994d")
 	)
 	(wire
 		(pts
@@ -3224,16 +3203,6 @@
 	)
 	(wire
 		(pts
-			(xy 148.59 68.58) (xy 152.4 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "7c86b012-5004-424c-9345-ae826b916042")
-	)
-	(wire
-		(pts
 			(xy 57.15 101.6) (xy 66.04 101.6)
 		)
 		(stroke
@@ -3321,26 +3290,6 @@
 			(type default)
 		)
 		(uuid "bb101f06-a0f7-42bf-97d0-e4c7bc8f250e")
-	)
-	(wire
-		(pts
-			(xy 148.59 73.66) (xy 152.4 73.66)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "c81c965b-d08b-4801-999b-578da397f25b")
-	)
-	(wire
-		(pts
-			(xy 148.59 73.66) (xy 148.59 68.58)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "cd95566f-08d4-4420-85e9-0b5e15455d20")
 	)
 	(wire
 		(pts
@@ -4522,122 +4471,6 @@
 		)
 	)
 	(symbol
-		(lib_id "74xx:74HC08")
-		(at 160.02 71.12 0)
-		(unit 4)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "43b632e7-c2ef-4e3b-a552-dc1bcd1d8ae8")
-		(property "Reference" "U9"
-			(at 160.0117 62.23 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "74HC08"
-			(at 160.0117 64.77 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" "Package_DIP:DIP-14_W7.62mm_LongPads"
-			(at 160.02 71.12 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" "http://www.ti.com/lit/gpn/sn74HC08"
-			(at 160.02 71.12 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Quad And2"
-			(at 160.02 71.12 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "14"
-			(uuid "014b55fd-2f1b-43de-96e5-6f07467b9dd8")
-		)
-		(pin "13"
-			(uuid "bbdf7160-d3d8-49db-89f7-97b31c690a35")
-		)
-		(pin "7"
-			(uuid "b3bd4eb8-8c1e-443c-933b-d25dfb0914c9")
-		)
-		(pin "10"
-			(uuid "0f4ce275-9145-4dec-a50f-ca926ba8c5d8")
-		)
-		(pin "12"
-			(uuid "80d11c46-44f3-4e07-a323-8894f419895a")
-		)
-		(pin "8"
-			(uuid "7a59c6ba-1eef-4337-9a87-bb5261eadb8a")
-		)
-		(pin "1"
-			(uuid "d5473662-08fc-436a-ad2c-7f9bf010b052")
-		)
-		(pin "3"
-			(uuid "f0c74271-c994-4298-a637-c67c57becea2")
-		)
-		(pin "5"
-			(uuid "5100fc28-4608-4ebd-b10f-fb0aa19d7451")
-		)
-		(pin "9"
-			(uuid "de22cf39-0c44-4b25-a108-b8994169553a")
-		)
-		(pin "2"
-			(uuid "ce4b7a26-11bc-4aca-9dfa-0b3d824184c1")
-		)
-		(pin "4"
-			(uuid "4e1d0686-a474-4930-ad62-4f1e563238aa")
-		)
-		(pin "6"
-			(uuid "5d7a321c-2178-460b-b103-0486a1e157f1")
-		)
-		(pin "11"
-			(uuid "6cda4079-ef62-469d-88d0-d3f2dab46414")
-		)
-		(instances
-			(project "CPU"
-				(path "/c85302cd-e07d-44e5-8d89-7c71d37e12a4"
-					(reference "U9")
-					(unit 4)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "74xx:74HC04")
 		(at 69.85 142.24 0)
 		(unit 5)
@@ -5457,85 +5290,6 @@
 			(project "CPU"
 				(path "/c85302cd-e07d-44e5-8d89-7c71d37e12a4"
 					(reference "#PWR031")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "power:GND")
-		(at 148.59 78.74 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "b76df242-b119-44d2-8033-665691328019")
-		(property "Reference" "#PWR089"
-			(at 148.59 85.09 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 148.59 83.82 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Footprint" ""
-			(at 148.59 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 148.59 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 148.59 78.74 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "0e2b27b3-edf4-4bd4-8d8f-5e6924970e01")
-		)
-		(instances
-			(project "CPU"
-				(path "/c85302cd-e07d-44e5-8d89-7c71d37e12a4"
-					(reference "#PWR089")
 					(unit 1)
 				)
 			)
